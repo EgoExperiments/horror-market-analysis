@@ -2,10 +2,11 @@ import os
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+from tqdm import tqdm
 
 def get_steam_appids(query, pages=20):
     appids = []
-    for page in range(1, pages + 1):
+    for page in tqdm(range(1, pages + 1), desc="Fetching app IDs", unit="page"):
         url = f"https://store.steampowered.com/search/?term={query}&page={page}"
         response = requests.get(url)
         soup = BeautifulSoup(response.content, 'html.parser')
@@ -22,7 +23,7 @@ data_dir = os.path.join(script_dir, '..', 'data')
 os.makedirs(data_dir, exist_ok=True)
 
 # Get appids for indie horror games
-appids = get_steam_appids('indie horror', pages=10)  # Adjust pages as needed
+appids = get_steam_appids('indie horror', pages=20)  # Adjust pages as needed
 appids_df = pd.DataFrame(appids, columns=['appid'])
 appids_df.to_csv(os.path.join(data_dir, 'indie_horror_appids.csv'), index=False)
 

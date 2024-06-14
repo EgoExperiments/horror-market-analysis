@@ -1,10 +1,31 @@
+import os
+import time
 import requests
 import pandas as pd
-import os
+from tqdm import tqdm
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
-def get_steamspy_data(appid):
-    response = requests.get(f'http://steamspy.com/api.php?request=appdetails&appid={appid}')
-    return response.json()
+def get_steamspy_data(appid, retries=3, backoff_factor=0.3):
+    session = requests.Session()
+    retry = Retry(
+        total=retries,
+        read=retries,
+        connect=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=(500, 502, 504),
+    )
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+    
+    try:
+        response = session.get(f'http://steamspy.com/api.php?request=appdetails&appid={appid}')
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching data for appid {appid}: {e}")
+        return None
 
 # Load appIDs from the CSV file
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -13,9 +34,11 @@ appids_df = pd.read_csv(os.path.join(data_dir, 'indie_horror_appids.csv'))
 appids = appids_df['appid'].tolist()
 
 data = []
-for appid in appids:
+for appid in tqdm(appids, desc="Fetching game data", unit="appid"):
     game_data = get_steamspy_data(appid)
-    data.append(game_data)
+    if game_data:
+        data.append(game_data)
+    #time.sleep(1)  # Add a delay between requests to avoid overwhelming the server
 
 # Convert to DataFrame
 games_df = pd.DataFrame(data)
