@@ -14,4 +14,6 @@ python scripts/collect_appids.py
 python scripts/fetch_game_data.py
 
 4. **Run Analysis Notebook:**
+jupyter notebook
+
 Open notebooks/analysis.ipynb in Jupyter Notebook and run the cells.

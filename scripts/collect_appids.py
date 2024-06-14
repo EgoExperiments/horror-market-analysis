@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 
-def get_steam_appids(query, pages=5):
+def get_steam_appids(query, pages=20):
     appids = []
     for page in range(1, pages + 1):
         url = f"https://store.steampowered.com/search/?term={query}&page={page}"
