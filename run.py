@@ -32,6 +32,8 @@ run_command("python scripts/fetch_game_data.py")
 
 # Step 3: Run Analysis Notebook
 print("")
-print("Starting Jupyter Notebook...")
+print("\033[1m\033[35mStarting Jupyter Notebook...\033[0m")
+print("")
+time.sleep(1)
 run_command("jupyter notebook")
 
