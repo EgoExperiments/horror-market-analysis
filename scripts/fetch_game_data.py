@@ -17,7 +17,7 @@ def get_steamspy_data(appid, retries=3, backoff_factor=0.3):
         total=retries,
         read=retries,
         connect=retries,
-        backoff_factor=backoff_factor,
+        backoff_factor=0.3,
         status_forcelist=(500, 502, 504),
     )
     adapter = HTTPAdapter(max_retries=retry)
@@ -32,6 +32,14 @@ def get_steamspy_data(appid, retries=3, backoff_factor=0.3):
         print(f"Error fetching data for appid {appid}: {e}")
         return None
 
+def filter_games_by_tags(data, required_tags):
+    filtered_data = []
+    for game in data:
+        game_tags = game.get('tags', {})
+        if all(tag in game_tags for tag in required_tags):
+            filtered_data.append(game)
+    return filtered_data
+
 # Load appIDs from the CSV file
 script_dir = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(script_dir, '..', 'data')
@@ -43,10 +51,15 @@ for appid in TqdmColored(appids, desc="Analyzing game data", unit="appid"):
     game_data = get_steamspy_data(appid)
     if game_data:
         data.append(game_data)
-    #time.sleep(1)  # Add a delay between requests to avoid overwhelming the server
+
+# Required tags for filtering
+required_tags = ['Indie', 'Horror', 'Psychological Horror']
+
+# Filter games by tags
+filtered_data = filter_games_by_tags(data, required_tags)
 
 # Convert to DataFrame
-games_df = pd.DataFrame(data)
+games_df = pd.DataFrame(filtered_data)
 games_df.to_csv(os.path.join(data_dir, 'indie_horror_games_data.csv'), index=False)
 time.sleep(1)
-print("\033[1m\033[92mData collection complete.\033[0m")
+print(f"\033[1m\033[92mData collection complete. Collected {len(filtered_data)} games.\033[0m")
